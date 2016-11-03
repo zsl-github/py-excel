@@ -18,6 +18,17 @@ def print_workbook(wb):
                 #strRow += ("\t" + string(c.value))
                 print(c.value)
     #print("ROW[" + r + "]:", strRow)  
+
+#把excel的内容存到一个文件中
+def wt_to_file(wb, filename):
+    f = open(filename, 'w')
+    for s in wb.sheets():
+        for r in range(s.nrows):
+            for c in range(s.ncols):
+                f.write(str(r)+" " + str(c)+":"+str(s.cell(r, c).value).replace('\n', '\t'))
+            f.write('\n')
+    f.close()
+
   
 #把一行转化为一个字符串  
 def row_to_str(row):  
@@ -216,12 +227,14 @@ def main():
     hw_File = "C:\\Users\\zwx318792\\Desktop\\xls_test\\huawei.xls"
     hq_File = "C:\\Users\\zwx318792\\Desktop\\xls_test_change.xls"
     test_file = "/home/zsi1989u/zsl-github/zsl-excle/py_test.xlsx"
+    txt = "/home/zsi1989u/zsl-github/zsl-excle/test.txt"
 
     #rb_hw = open_excel(hw_File)
     #rb_hq = open_excel(hq_File)
     rb_test = open_excel(test_file)
    
-    print_workbook(rb_test)
+    #print_workbook(rb_test)
+    wt_to_file(rb_test, txt)
     #print_workbook(rb_hw)
     #wb = Workbook()
     #list_row = excel_table_byindex(rb_hw,1108,1)
