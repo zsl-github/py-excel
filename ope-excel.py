@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import xlrd
 import xlwt
+import xlutils
 import sys
 from xlwt import *    
 from xlrd import open_workbook
 
 from xlrd import open_workbook  
 import sys  
+from xlutils.copy import copy
   
 #输出整个Excel文件的内容  
 def print_workbook(wb):  
@@ -25,9 +27,11 @@ def wt_to_file(wb, filename):
     for s in wb.sheets():
         for r in range(s.nrows):
             for c in range(s.ncols):
-                f.write(str(r)+" " + str(c)+":"+str(s.cell(r, c).value).replace('\n', '\t'))
+                f.write(str(r)+" " + str(c)+":"+str(s.cell(r, c).value.encode('utf-8')).replace('\n', '\t'))
             f.write('\n')
     f.close()
+
+#把excel的内容放到另外一个excel
 
   
 #把一行转化为一个字符串  
@@ -133,10 +137,18 @@ def diff_row(row1, row2):
   print_report(report)  
 '''
 #对比两个表格差异
+
+#创建一个xls文件，保存数据
+def create_excel(filename):
+    w = Workbook(encoding='utf-8')
+    w_sheet = w.add_sheet('zsl-sheet1')
+    #w_sheet.write(0,1, 'hahahaha')
+    w.save(filename)
+
 #打开一个xls文件，读取数据
-def open_excel(file= 'file.xls'):
+def open_excel(f= 'file.xls'):
     try:
-        data = xlrd.open_workbook(file,encoding_override='utf-8')
+        data = xlrd.open_workbook(f,encoding_override='utf-8')
         return data
     except Exception as e:
         print("文件打开错误")
@@ -232,9 +244,14 @@ def main():
     #rb_hw = open_excel(hw_File)
     #rb_hq = open_excel(hq_File)
     rb_test = open_excel(test_file)
+    wb_text = copy(rb_test)
+    wb_sheet =wb_text.add_sheet("zsl-sheet3")
+
+    wb_sheet.write(5,6,u'你好啊')
+    wb_text.save(test_file)
    
     #print_workbook(rb_test)
-    wt_to_file(rb_test, txt)
+    #wt_to_file(rb_test, txt)
     #print_workbook(rb_hw)
     #wb = Workbook()
     #list_row = excel_table_byindex(rb_hw,1108,1)
