@@ -32,8 +32,8 @@ def open_excel(f= 'file.xls'):
         return data
     except Exception as e:
         print(e)
-#创建一个xls文件，保存数据
 
+#创建一个xls文件，保存数据
 def create_new_excel(filename):
     if (os.path.exists(filename)):
         print("文件已经存在,无需创建")
@@ -51,6 +51,26 @@ def copy_excel(soufile, desfile):
     wt_wb = copy(rb_wb)
     wt_wb.save(desfile)
 
+#给一个表格插入列,每列的内容相同
+def insert_one_col(wtsheet, rdsheet, newcolnum, instr, headstr=None):
+    for moverow in range(0, rdsheet.nrows):
+        for movecol in range(rdsheet.ncols-1, newcolnum-1, -1):
+            if movecol == newcolnum:
+                wtsheet.write(moverow, movecol, instr)
+            else:
+                wtsheet.write(moverow, movecol+1, rdsheet.cell(moverow, movecol).value.encode('utf-8'))
+
+    if not headstr == None:
+        wtsheet.write(0, newcolnum, headstr)
+
+#给一个表格插入行,每列的内容相同
+def insert_one_row(wtsheet, rdsheet, newrownum, instr):
+    for movecol in range(0, rdsheet.ncols):
+        for moverow in range(rdsheet.nrows-1, newrownum-1, -1):
+            if moverow == newrownum:
+                wtsheet.write(moverow, movecol, instr)
+            else:
+                wtsheet.write(moverow+1, movecol, rdsheet.cell(moverow, movecol).value.encode('utf-8'))
 
 #输出整个Excel文件的内容  
 def print_workbook(rb):  
@@ -78,6 +98,50 @@ def get_same_sheet(rb1, rb2):
     print(same_list)
     return same_list
 
+#获取list列表中的字串成员
+def get_str_list_from_list(des_list):
+    str_list = [s for s in des_list if isinstance(s, types.StringTypes)]
+    return str_list
+
+#把一个list转换为一个字串，去掉其中的换行符
+def get_str_from_list(des_list):
+    return ''.join(des_list).replace('\n', '')
+
+#合并两个行中的差异信息
+def merge_df_row(row1, row2):
+    pass
+
+#获得两个sheet相似的列
+def get_same_row(sheet1, sheet2, simi_val):
+    row1_value0 = get_str_list_from_list(sheet1.row_values(0))
+    row2_value0 = get_str_list_from_list(sheet2.row_values(0))
+    same_col = []
+    for col1 in row1_value0:
+        for col2 in row2_value0:
+            if Levenshtein.ratio(col1, col2) > simi_val:
+                same_col.append(col1)
+                break
+    print(same_col)
+    return same_col
+    
+#获得两个list中相似度达到一定条件的元素
+def get_same_item(list1, list2, simi_val):
+    list1 = sorted(get_str_list_from_list(list1))
+    list2 = sorted(get_str_list_from_list(list2))
+    same_col_list = []
+    print("list1:")
+    print(list1)
+    print("list2:")
+    print(list2)
+    for item1 in list1:
+        for item2 in list2:
+            if Levenshtein.ratio(item1, item2) > simi_val:
+                same_col = [item1, item2]
+                same_col_list.append(same_col)
+                break
+    print(same_col_list)
+    return same_col_list
+
 #打印diff结果报表  
 def print_report(report):  
     for o in report:  
@@ -102,14 +166,6 @@ def diff_sheet_by_row(sheet1, sheet2, simi_val):
             #相似度函数判断
             if Levenshtein.ratio(row1_value, row2_value) < simi_val:
                 print("相等")
-
-#获取list列表中的字串成员
-def get_str_from_list(des_list):
-    str_list = [s for s in des_list if isinstance(s, types.StringTypes)]
-    return ''.join(str_list).replace('\n', '')
-
-#合并两个行中的差异信息
-def merge_df_row(row1, row2):
 
 
 '''
@@ -266,26 +322,29 @@ def com_string_row_sheet(rb_hw,rb_hq,hw_sheet,hw_row,hq_sheet):
     return 0
 
 def main():
-    ok_File = "/home/zsi1989u/zsl-github/zsl-excle/ok_ex.xlsx"
-    no_File = "/home/zsi1989u/zsl-github/zsl-excle/no_ex.xlsx"
+    ok_file = "/home/zsi1989u/zsl-github/zsl-excle/ok_ex.xlsx"
+    no_file = "/home/zsi1989u/zsl-github/zsl-excle/no_ex.xlsx"
     txt = "/home/zsi1989u/zsl-github/zsl-excle/test.txt"
 
-    rd_ok = open_excel(ok_File)
-    rd_no = open_excel(no_File)
+    #获得读实例
+    rd_ok = open_excel(ok_file)
+    rd_no = open_excel(no_file)
+    #获得写实例
+    wt_no = copy(rd_no)
+    #插入一列内容
+    #insert_one_col(wt_no.get_sheet(0),rd_no.sheet_by_index(0), 0, "11111111", "zzzzzz")
+    insert_one_row(wt_no.get_sheet(0),rd_no.sheet_by_index(0), 0, "11111111")
+    wt_no.save(no_file)
     same_list = get_same_sheet(rd_ok, rd_no)
     for sh_name in same_list:
         sh1 = rd_ok.sheet_by_name(sh_name)
         sh2 = rd_no.sheet_by_name(sh_name)
-        diff_sheet(sh1, sh2, 0.5, 0)
+        #diff_sheet(sh1, sh2, 0.5, 0)
+        # get_same_item(sh1.row_values(0), sh2.row_values(0), 0.1)
 
-    #print_workbook(rb_test)
-    #wt_to_file(rb_test, txt)
-    #print_workbook(rb_hw)
-    #wb = Workbook()
-    #list_row = excel_table_byindex(rb_hw,1108,1)
-    #print(list)
-    #isinclude = com_string(rb_hw,rb_hw,5,87,3,67)
-    #print(isinclude)
+    #给一个表格插入五个默认列
+    #现在有两种方案1.表格中的内容跟另外的一整个表格进行匹配，不按页进行区分，这个适合查找所有的评估记录
+    #根据sheet页进行对比，这个适合查找某个小Ｔ责任人
 
 
 if __name__=="__main__":
