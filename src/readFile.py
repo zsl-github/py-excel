@@ -4,26 +4,110 @@ import xlwt
 import xlutils
 import sys
 import os
+import re
 import types
 import Levenshtein
 from xlwt import *    
 from xlrd import open_workbook
+from utils import FileUtils
 
 from xlrd import open_workbook  
 import sys  
 from xlutils.copy import copy
+import struct
+class ReadFile:
+    '''
+    打开一个文件，返回文件列表
+    '''
+    def get_list_from_file(self, filename):
+        if not os.path.isfile(filename):
+            print("请确认文件存在")
+            return None
+        file_type = FileUtils().filetype(filename)
+        if file_type == None:
+            print("纯文本文件")
+            self.__get_list_from_text(filename)
+        elif file_type == "Word-Excel":
+            self.__get_list_from_excel(filename)
+        elif file_type == "aa":
+            pass
+        else:
+            pass
 
-'''
-常用方法
-Workbook----
-1.get_sheet:获得sheet页
+    '''
+    打开一个文本文件，返回文件内容的list
+    '''
+    def __get_list_from_text(self, filename):
+        if "sys_result" in os.path.basename(filename):
+            self.__get_list_from_sys_result(filename)
+        elif "set_result" in os.path.basename(filename):
+            get_list_from_set_result()
+        else:
+            pass
 
-Worksheet----
-1.set_name:修改sheet页名称
+    '''
+    从sys_result中获得SystemProperties后的开关key值
+    '''
+    def __get_list_from_sys_result(self, filename):
 
-xlutils.display----
-1.cell_display:读取cell内容
-'''
+        sys_re = 'SystemProperties\.[sg]?.*?\("?[\s\d-]*(.*?)[",)]'
+        sys_com = re.compile(sys_re)
+
+        f = open(filename, 'r')
+        f_list = set()
+        try:
+            f_str = f.read()
+            f_list = set(re.findall(sys_com, f_str))
+
+        finally:
+            f.close()
+        print(len(f_list))
+
+    '''
+    从sys_result中获得SystemProperties后的开关key值
+    '''
+    def __get_list_from_set_result(self, filename):
+
+        sys_re = 'Settings\.[sg]?et.*?\(.*?,[,\s\d-]]'
+        sys_com = re.compile(sys_re)
+
+        f = open(filename, 'r')
+        f_list = set()
+        try:
+            f_str = f.read()
+            f_list = set(re.findall(sys_com, f_str))
+
+        finally:
+            f.close()
+
+    '''
+    获得excel表格中的的全部内容
+    '''
+    def __get_list_from_excel(self, filename):
+
+        excel_dict=dict()
+        try:
+            rd_book = xlrd.open_workbook(filename)
+            
+            for s in rd_book.sheets():  
+                sh_list = list()
+                for r in range(s.nrows):
+                    sh_list.append(s.row_values(r))
+                excel_dict[s.name] = sh_list
+        except Exception as e:
+            print(e)
+
+        return excel_dict
+
+
+
+
+
+
+
+
+
+
 
 #打开一个xls文件，读取数据
 def open_excel(f= 'file.xls'):
@@ -72,15 +156,6 @@ def insert_one_row(wtsheet, rdsheet, newrownum, instr):
             else:
                 wtsheet.write(moverow+1, movecol, rdsheet.cell(moverow, movecol).value.encode('utf-8'))
 
-#输出整个Excel文件的内容  
-def print_workbook(rb):  
-    #sheet
-    for s in rb.sheets():  
-        #row
-        for r in range(s.nrows):  
-            #col
-            for c in s.row(r):
-                print(c.value)
 
 #把excel的内容存到一个文件中
 def wt_to_file(rb, filename):
@@ -320,32 +395,3 @@ def com_string_row_sheet(rb_hw,rb_hq,hw_sheet,hw_row,hq_sheet):
         if (com_string_row_col(rb_hw,rb_hq,hw_sheet,hw_row,hq_sheet,i) ==1):
             return 1
     return 0
-
-def main():
-    ok_file = "/home/zsi1989u/zsl-github/zsl-excle/ok_ex.xlsx"
-    no_file = "/home/zsi1989u/zsl-github/zsl-excle/no_ex.xlsx"
-    txt = "/home/zsi1989u/zsl-github/zsl-excle/test.txt"
-
-    #获得读实例
-    rd_ok = open_excel(ok_file)
-    rd_no = open_excel(no_file)
-    #获得写实例
-    wt_no = copy(rd_no)
-    #插入一列内容
-    #insert_one_col(wt_no.get_sheet(0),rd_no.sheet_by_index(0), 0, "11111111", "zzzzzz")
-    insert_one_row(wt_no.get_sheet(0),rd_no.sheet_by_index(0), 0, "11111111")
-    wt_no.save(no_file)
-    same_list = get_same_sheet(rd_ok, rd_no)
-    for sh_name in same_list:
-        sh1 = rd_ok.sheet_by_name(sh_name)
-        sh2 = rd_no.sheet_by_name(sh_name)
-        #diff_sheet(sh1, sh2, 0.5, 0)
-        # get_same_item(sh1.row_values(0), sh2.row_values(0), 0.1)
-
-    #给一个表格插入五个默认列
-    #现在有两种方案1.表格中的内容跟另外的一整个表格进行匹配，不按页进行区分，这个适合查找所有的评估记录
-    #根据sheet页进行对比，这个适合查找某个小Ｔ责任人
-
-
-if __name__=="__main__":
-    main()
