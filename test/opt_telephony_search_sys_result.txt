@@ -1,0 +1,936 @@
+tests/telephonytests/src/com/android/internal/telephony/imsphone/ImsPhoneTest.java
+24-import android.os.Bundle;
+25-import android.os.Handler;
+26-import android.os.HandlerThread;
+27-import android.os.Message;
+28:import android.os.SystemProperties;
+29-import android.test.suitebuilder.annotation.SmallTest;
+30-
+31-import com.android.ims.ImsCallProfile;
+32-import com.android.ims.ImsEcbmStateListener;
+--
+118-
+119-        new ImsPhoneTestHandler(TAG).start();
+120-        waitUntilReady();
+121-
+122:        mDoesRilSendMultipleCallRing = SystemProperties.getBoolean(
+123-                TelephonyProperties.PROPERTY_RIL_SENDS_MULTIPLE_CALL_RING, true);
+124-        replaceInstance(Handler.class, "mLooper", mTestHandler, mImsPhoneUT.getLooper());
+125-        replaceInstance(Phone.class, "mLooper", mPhone, mImsPhoneUT.getLooper());
+126-        mImsPhoneUT.registerForSuppServiceNotification(mTestHandler,
+
+tests/telephonytests/src/com/android/internal/telephony/GsmCdmaCallTrackerTest.java
+15- */
+16-package com.android.internal.telephony;
+17-
+18-import android.os.HandlerThread;
+19:import android.os.SystemProperties;
+20-import android.os.PersistableBundle;
+21-import android.telephony.CarrierConfigManager;
+22-import android.telephony.DisconnectCause;
+23-import android.telephony.PhoneNumberUtils;
+
+tests/telephonytests/src/com/android/internal/telephony/mocks/ConnectivityServiceMock.java
+88-import android.os.Process;
+89-import android.os.RemoteException;
+90-import android.os.ResultReceiver;
+91-import android.os.SystemClock;
+92:import android.os.SystemProperties;
+93-import android.os.UserHandle;
+94-import android.os.UserManager;
+95-import android.provider.Settings;
+96-import android.security.Credentials;
+
+tests/telephonytests/src/com/android/internal/telephony/gsm/GsmSmsDispatcherTest.java
+26-import android.location.Country;
+27-import android.location.CountryDetector;
+28-import android.os.HandlerThread;
+29-import android.os.Message;
+30:import android.os.SystemProperties;
+31-import android.provider.Telephony;
+32-import android.test.suitebuilder.annotation.MediumTest;
+33-import android.test.suitebuilder.annotation.SmallTest;
+34-
+--
+124-        when(mCountryDetector.detectCountry())
+125-                .thenReturn(new Country("US", Country.COUNTRY_SOURCE_SIM));
+126-
+127-        mGsmSmsDispatcher.sendText(
+128:                getEmergencyNumberFromSystemPropertiesOrDefault(), "121" /*scAddr*/, "test sms",
+129-                null, null, null, null, false);
+130-
+131-        verify(mSimulatedCommandsVerifier).sendSMS(anyString(), anyString(), any(Message.class));
+132-        // Blocked number provider is notified about the emergency contact asynchronously.
+133-        TelephonyTestUtils.waitForMs(50);
+134-        assertEquals(1, mFakeBlockedNumberContentProvider.mNumEmergencyContactNotifications);
+135-    }
+136-
+137:    private String getEmergencyNumberFromSystemPropertiesOrDefault() {
+138:        String systemEmergencyNumbers = SystemProperties.get("ril.ecclist");
+139-        if (systemEmergencyNumbers == null) {
+140-            return "911";
+141-        } else {
+142-            return systemEmergencyNumbers.split(",")[0];
+
+src/java/com/android/internal/telephony/MccTable.java
+22-import android.content.res.Configuration;
+23-import android.net.wifi.WifiManager;
+24-import android.os.Build;
+25-import android.os.RemoteException;
+26:import android.os.SystemProperties;
+27-import android.telephony.TelephonyManager;
+28-import android.text.TextUtils;
+29-import android.util.Slog;
+30-
+--
+158-            boolean fromServiceState) {
+159-        Slog.d(LOG_TAG, "updateMccMncConfiguration mccmnc='" + mccmnc + "' fromServiceState=" + fromServiceState);
+160-
+161-        if (Build.IS_DEBUGGABLE) {
+162:            String overrideMcc = SystemProperties.get("persist.sys.override_mcc");
+163-            if (!TextUtils.isEmpty(overrideMcc)) {
+164-                mccmnc = overrideMcc;
+165-                Slog.d(LOG_TAG, "updateMccMncConfiguration overriding mccmnc='" + mccmnc + "'");
+166-            }
+--
+328-     * @param context Context to act on.
+329-     * @param mcc Mobile Country Code of the SIM or SIM-like entity (build prop on CDMA)
+330-     */
+331-    private static void setTimezoneFromMccIfNeeded(Context context, int mcc) {
+332:        String timezone = SystemProperties.get(ServiceStateTracker.TIMEZONE_PROPERTY);
+333-        if (timezone == null || timezone.length() == 0) {
+334-            String zoneId = defaultTimeZoneForMcc(mcc);
+335-            if (zoneId != null && zoneId.length() > 0) {
+336-                // Set time zone based on MCC
+
+src/java/com/android/internal/telephony/uicc/RuimRecords.java
+25-import java.util.Locale;
+26-import android.content.Context;
+27-import android.os.AsyncResult;
+28-import android.os.Message;
+29:import android.os.SystemProperties;
+30-import android.telephony.SubscriptionInfo;
+31-import android.telephony.SubscriptionManager;
+32-import android.telephony.Rlog;
+33-import android.text.TextUtils;
+--
+881-        // consider the SIM is provisioned. (for case of ordinal
+882-        // USIM only UICC.)
+883-        // If PROPERTY_TEST_CSIM is defined, bypess provision check
+884-        // and consider the SIM is provisioned.
+885:        if (SystemProperties.getBoolean(PROPERTY_TEST_CSIM, false)) {
+886-            return true;
+887-        }
+888-
+889-        if (mParentApp == null) {
+
+src/java/com/android/internal/telephony/uicc/IccCardProxy.java
+25-import android.os.Handler;
+26-import android.os.Message;
+27-import android.os.Registrant;
+28-import android.os.RegistrantList;
+29:import android.os.SystemProperties;
+30-import android.os.UserHandle;
+31-import android.telephony.Rlog;
+32-import android.telephony.ServiceState;
+33-import android.telephony.SubscriptionManager;
+
+src/java/com/android/internal/telephony/uicc/UiccController.java
+21-import android.os.Handler;
+22-import android.os.Message;
+23-import android.os.Registrant;
+24-import android.os.RegistrantList;
+25:import android.os.SystemProperties;
+26-import android.telephony.TelephonyManager;
+27-import android.telephony.Rlog;
+28-import android.text.format.Time;
+29-
+--
+121-        for (int i = 0; i < mCis.length; i++) {
+122-            Integer index = new Integer(i);
+123-            mCis[i].registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, index);
+124-            // TODO remove this once modem correctly notifies the unsols
+125:            if (DECRYPT_STATE.equals(SystemProperties.get("vold.decrypt"))) {
+126-                mCis[i].registerForAvailable(this, EVENT_ICC_STATUS_CHANGED, index);
+127-            } else {
+128-                mCis[i].registerForOn(this, EVENT_ICC_STATUS_CHANGED, index);
+129-            }
+
+src/java/com/android/internal/telephony/imsphone/ImsPhone.java
+32-import android.os.PowerManager;
+33-import android.os.Registrant;
+34-import android.os.RegistrantList;
+35-import android.os.PowerManager.WakeLock;
+36:import android.os.SystemProperties;
+37-import android.os.UserHandle;
+38-
+39-import android.provider.Telephony;
+40-import android.telephony.CarrierConfigManager;
+--
+200-        mPhoneId = mDefaultPhone.getPhoneId();
+201-
+202-        // This is needed to handle phone process crashes
+203-        // Same property is used for both CDMA & IMS phone.
+204:        mIsPhoneInEcmState = SystemProperties.getBoolean(
+205-                TelephonyProperties.PROPERTY_INECM_MODE, false);
+206-
+207-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+208-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, LOG_TAG);
+--
+1299-            setSystemProperty(TelephonyProperties.PROPERTY_INECM_MODE, "true");
+1300-
+1301-            // Post this runnable so we will automatically exit
+1302-            // if no one invokes exitEmergencyCallbackMode() directly.
+1303:            long delayInMillis = SystemProperties.getLong(
+1304-                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+1305-            postDelayed(mExitEcmRunnable, delayInMillis);
+1306-            // We don't want to go to sleep while in Ecm
+1307-            mWakeLock.acquire();
+--
+1344-                removeCallbacks(mExitEcmRunnable);
+1345-                ((GsmCdmaPhone) mDefaultPhone).notifyEcbmTimerReset(Boolean.TRUE);
+1346-                break;
+1347-            case RESTART_ECM_TIMER:
+1348:                long delayInMillis = SystemProperties.getLong(
+1349-                        TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+1350-                postDelayed(mExitEcmRunnable, delayInMillis);
+1351-                ((GsmCdmaPhone) mDefaultPhone).notifyEcbmTimerReset(Boolean.FALSE);
+1352-                break;
+
+src/java/com/android/internal/telephony/imsphone/ImsPhoneCallTracker.java
+34-import android.os.PersistableBundle;
+35-import android.os.Registrant;
+36-import android.os.RegistrantList;
+37-import android.os.RemoteException;
+38:import android.os.SystemProperties;
+39-import android.provider.Settings;
+40-import android.telephony.CarrierConfigManager;
+41-import android.text.TextUtils;
+42-import android.preference.PreferenceManager;
+--
+701-    public boolean
+702-    canDial() {
+703-        boolean ret;
+704-        int serviceState = mPhone.getServiceState().getState();
+705:        String disableCall = SystemProperties.get(
+706-                TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
+707-
+708-        ret = (serviceState != ServiceState.STATE_POWER_OFF)
+709-            && mPendingMO == null
+--
+1177-    /**
+1178-     * @return true if the phone is in Emergency Callback mode, otherwise false
+1179-     */
+1180-    private boolean isPhoneInEcbMode() {
+1181:        return SystemProperties.getBoolean(TelephonyProperties.PROPERTY_INECM_MODE, false);
+1182-    }
+1183-
+1184-    /**
+1185-     * Before dialing pending MO request, check for the Emergency Callback mode.
+
+src/java/com/android/internal/telephony/imsphone/ImsPhoneBase.java
+21-import android.os.AsyncResult;
+22-import android.os.Handler;
+23-import android.os.Message;
+24-import android.os.RegistrantList;
+25:import android.os.SystemProperties;
+26-import android.telephony.CellInfo;
+27-import android.telephony.CellLocation;
+28-import android.telephony.ServiceState;
+29-import android.telephony.SignalStrength;
+--
+242-        int serviceState = getServiceState().getState();
+243-        Rlog.v(LOG_TAG, "canDial(): serviceState = " + serviceState);
+244-        if (serviceState == ServiceState.STATE_POWER_OFF) return false;
+245-
+246:        String disableCall = SystemProperties.get(
+247-                TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
+248-        Rlog.v(LOG_TAG, "canDial(): disableCall = " + disableCall);
+249-        if (disableCall.equals("true")) return false;
+250-
+
+src/java/com/android/internal/telephony/cdma/SmsMessage.java
+16-
+17-package com.android.internal.telephony.cdma;
+18-
+19-import android.os.Parcel;
+20:import android.os.SystemProperties;
+21-import android.telephony.PhoneNumberUtils;
+22-import android.telephony.SmsCbLocation;
+23-import android.telephony.SmsCbMessage;
+24-import android.telephony.TelephonyManager;
+--
+834-        // Testing and dialog with partners has indicated that
+835-        // msgId==0 is (sometimes?) treated specially by lower levels.
+836-        // Specifically, the ID is not preserved for delivery ACKs.
+837-        // Hence, avoid 0 -- constraining the range to 1..65535.
+838:        int msgId = SystemProperties.getInt(TelephonyProperties.PROPERTY_CDMA_MSG_ID, 1);
+839-        String nextMsgId = Integer.toString((msgId % 0xFFFF) + 1);
+840-        try{
+841:            SystemProperties.set(TelephonyProperties.PROPERTY_CDMA_MSG_ID, nextMsgId);
+842-            if (Rlog.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
+843-                Rlog.d(LOG_TAG, "next " + TelephonyProperties.PROPERTY_CDMA_MSG_ID + " = " + nextMsgId);
+844-                Rlog.d(LOG_TAG, "readback gets " +
+845:                        SystemProperties.get(TelephonyProperties.PROPERTY_CDMA_MSG_ID));
+846-            }
+847-        } catch(RuntimeException ex) {
+848-            Rlog.e(LOG_TAG, "set nextMessage ID failed: " + ex);
+849-        }
+
+src/java/com/android/internal/telephony/cdma/CdmaSMSDispatcher.java
+21-import android.app.PendingIntent.CanceledException;
+22-import android.content.Intent;
+23-import android.net.Uri;
+24-import android.os.Message;
+25:import android.os.SystemProperties;
+26-import android.provider.Telephony.Sms;
+27-import android.telephony.Rlog;
+28-import android.telephony.ServiceState;
+29-import android.telephony.SmsManager;
+--
+216-    }
+217-
+218-    @Override
+219-    protected void sendSubmitPdu(SmsTracker tracker) {
+220:        if (SystemProperties.getBoolean(TelephonyProperties.PROPERTY_INECM_MODE, false)) {
+221-            if (VDBG) {
+222-                Rlog.d(TAG, "Block SMS in Emergency Callback mode");
+223-            }
+224-            tracker.onFailed(mContext, SmsManager.RESULT_ERROR_NO_SERVICE, 0/*errorCode*/);
+
+src/java/com/android/internal/telephony/cdma/CdmaInboundSmsHandler.java
+19-import android.app.Activity;
+20-import android.content.Context;
+21-import android.content.res.Resources;
+22-import android.os.Message;
+23:import android.os.SystemProperties;
+24-import android.provider.Telephony.Sms.Intents;
+25-import android.telephony.SmsCbMessage;
+26-
+27-import com.android.internal.telephony.CellBroadcastHandler;
+
+src/java/com/android/internal/telephony/GsmCdmaCallTracker.java
+26-import android.os.Message;
+27-import android.os.PersistableBundle;
+28-import android.os.Registrant;
+29-import android.os.RegistrantList;
+30:import android.os.SystemProperties;
+31-import android.telephony.CarrierConfigManager;
+32-import android.telephony.CellLocation;
+33-import android.telephony.DisconnectCause;
+34-import android.telephony.PhoneNumberUtils;
+--
+389-        if (internationalRoaming) {
+390-            dialString = convertNumberIfNecessary(mPhone, dialString);
+391-        }
+392-
+393:        String inEcm=SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE, "false");
+394-        boolean isPhoneInEcmMode = inEcm.equals("true");
+395-        boolean isEmergencyCall =
+396-                PhoneNumberUtils.isLocalEmergencyNumber(mPhone.getContext(), dialString);
+397-
+--
+597-
+598-    private boolean canDial() {
+599-        boolean ret;
+600-        int serviceState = mPhone.getServiceState().getState();
+601:        String disableCall = SystemProperties.get(
+602-                TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
+603-
+604-        ret = (serviceState != ServiceState.STATE_POWER_OFF)
+605-                && mPendingMO == null
+--
+1505-     */
+1506-    private void checkAndEnableDataCallAfterEmergencyCallDropped() {
+1507-        if (mIsInEmergencyCall) {
+1508-            mIsInEmergencyCall = false;
+1509:            String inEcm=SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE, "false");
+1510-            if (Phone.DEBUG_PHONE) {
+1511-                log("checkAndEnableDataCallAfterEmergencyCallDropped,inEcm=" + inEcm);
+1512-            }
+1513-            if (inEcm.compareTo("false") == 0) {
+
+src/java/com/android/internal/telephony/ServiceStateTracker.java
+40-import android.os.RegistrantList;
+41-import android.os.RemoteException;
+42-import android.os.ServiceManager;
+43-import android.os.SystemClock;
+44:import android.os.SystemProperties;
+45-import android.os.UserHandle;
+46-import android.preference.PreferenceManager;
+47-import android.provider.Settings;
+48-import android.telephony.CarrierConfigManager;
+--
+450-    // Current Otasp value
+451-    private int mCurrentOtaspMode = OTASP_UNINITIALIZED;
+452-    /** if time between NITZ updates is less than mNitzUpdateSpacing the update may be ignored. */
+453-    public static final int NITZ_UPDATE_SPACING_DEFAULT = 1000 * 60 * 10;
+454:    private int mNitzUpdateSpacing = SystemProperties.getInt("ro.nitz_update_spacing",
+455-            NITZ_UPDATE_SPACING_DEFAULT);
+456-    /** If mNitzUpdateSpacing hasn't been exceeded but update is > mNitzUpdate do the update */
+457-    public static final int NITZ_UPDATE_DIFF_DEFAULT = 2000;
+458:    private int mNitzUpdateDiff = SystemProperties.getInt("ro.nitz_update_diff",
+459-            NITZ_UPDATE_DIFF_DEFAULT);
+460-    private int mRoamingIndicator;
+461-    private boolean mIsInPrl;
+462-    private int mDefaultRoamingIndicator;
+--
+1397-            provisioningState = OTASP_UNKNOWN;
+1398-        } else {
+1399-            if ((mMin.equals(UNACTIVATED_MIN_VALUE)
+1400-                    || mMin.substring(0,6).equals(UNACTIVATED_MIN2_VALUE))
+1401:                    || SystemProperties.getBoolean("test_cdma_setup", false)) {
+1402-                provisioningState = OTASP_NEEDED;
+1403-            } else {
+1404-                provisioningState = OTASP_NOT_NEEDED;
+1405-            }
+--
+1887-                        // TODO: Do we care about overriding in this case.
+1888-                        // If the NUMERIC field isn't valid use PROPERTY_CDMA_HOME_OPERATOR_NUMERIC
+1889-                        if ((opNames[2] == null) || (opNames[2].length() < 5)
+1890-                                || ("00000".equals(opNames[2]))) {
+1891:                            opNames[2] = SystemProperties.get(
+1892-                                    GsmCdmaPhone.PROPERTY_CDMA_HOME_OPERATOR_NUMERIC, "00000");
+1893-                            if (DBG) {
+1894-                                log("RIL_REQUEST_OPERATOR.response[2], the numeric, " +
+1895:                                        " is bad. Using SystemProperties '" +
+1896-                                        GsmCdmaPhone.PROPERTY_CDMA_HOME_OPERATOR_NUMERIC +
+1897-                                        "'= " + opNames[2]);
+1898-                            }
+1899-                        }
+--
+2053-            } else {
+2054-                log("updateRoamingState: no carrier config service available");
+2055-            }
+2056-
+2057:            if (Build.IS_DEBUGGABLE && SystemProperties.getBoolean(PROP_FORCE_ROAMING, false)) {
+2058-                mNewSS.setVoiceRoaming(true);
+2059-                mNewSS.setDataRoaming(true);
+2060-            }
+2061-        }
+--
+2488-        }
+2489-    }
+2490-
+2491-    private void pollStateDoneGsm() {
+2492:        if (Build.IS_DEBUGGABLE && SystemProperties.getBoolean(PROP_FORCE_ROAMING, false)) {
+2493-            mNewSS.setVoiceRoaming(true);
+2494-            mNewSS.setDataRoaming(true);
+2495-        }
+2496-        useDataRegStateForDataOnlyDevices();
+--
+2652-                if (!mNitzUpdatedTime && !mcc.equals("000") && !TextUtils.isEmpty(iso) &&
+2653-                        getAutoTimeZone()) {
+2654-
+2655-                    // Test both paths if ignore nitz is true
+2656:                    boolean testOneUniqueOffsetPath = SystemProperties.getBoolean(
+2657-                            TelephonyProperties.PROPERTY_IGNORE_NITZ, false) &&
+2658-                            ((SystemClock.uptimeMillis() & 1) == 0);
+2659-
+2660-                    ArrayList<TimeZone> uniqueZones = TimeUtils.getTimeZonesWithUniqueOffsets(iso);
+--
+2936-
+2937-    protected void pollStateDoneCdmaLte() {
+2938-        updateRoamingState();
+2939-
+2940:        if (Build.IS_DEBUGGABLE && SystemProperties.getBoolean(PROP_FORCE_ROAMING, false)) {
+2941-            mNewSS.setVoiceRoaming(true);
+2942-            mNewSS.setDataRoaming(true);
+2943-        }
+2944-
+--
+3073-                    eriText = (mIccRecords != null) ? mIccRecords.getServiceProviderName() : null;
+3074-                    if (TextUtils.isEmpty(eriText)) {
+3075-                        // Sets operator alpha property by retrieving from
+3076-                        // build-time system property
+3077:                        eriText = SystemProperties.get("ro.cdma.home.operator.alpha");
+3078-                    }
+3079-                } else if (mSS.getDataRegState() != ServiceState.STATE_IN_SERVICE) {
+3080-                    // Note that ServiceState.STATE_OUT_OF_SERVICE is valid used
+3081-                    // for mRegistrationState 0,2,3 and 4
+--
+3273-    protected void fixTimeZone(String isoCountryCode) {
+3274-        TimeZone zone = null;
+3275-        // If the offset is (0, false) and the time zone property
+3276-        // is set, use the time zone property rather than GMT.
+3277:        String zoneName = SystemProperties.get(TIMEZONE_PROPERTY);
+3278-        if (DBG) {
+3279-            log("fixTimeZone zoneName='" + zoneName +
+3280-                    "' mZoneOffset=" + mZoneOffset + " mZoneDst=" + mZoneDst +
+3281-                    " iso-cc='" + isoCountryCode +
+--
+3780-                }
+3781-                saveNitzTimeZone(zone.getID());
+3782-            }
+3783-
+3784:            String ignore = SystemProperties.get("gsm.ignore-nitz");
+3785-            if (ignore != null && ignore.equals("yes")) {
+3786-                log("NITZ: Not setting clock because gsm.ignore-nitz is set");
+3787-                return;
+3788-            }
+--
+3857-                            }
+3858-                        }
+3859-                    }
+3860-                }
+3861:                SystemProperties.set("gsm.nitz.time", String.valueOf(c.getTimeInMillis()));
+3862-                saveNitzTime(c.getTimeInMillis());
+3863-                mNitzUpdatedTime = true;
+3864-            } finally {
+3865-                if (DBG) {
+--
+4749-        String numeric = ((TelephonyManager) mPhone.getContext().
+4750-                getSystemService(Context.TELEPHONY_SERVICE)).
+4751-                getSimOperatorNumericForPhone(mPhone.getPhoneId());
+4752-        if (!mPhone.isPhoneTypeGsm() && TextUtils.isEmpty(numeric)) {
+4753:            numeric = SystemProperties.get(GsmCdmaPhone.PROPERTY_CDMA_HOME_OPERATOR_NUMERIC, "");
+4754-        }
+4755-        return numeric;
+4756-    }
+4757-
+
+src/java/com/android/internal/telephony/RIL.java
+40-import android.os.Message;
+41-import android.os.Parcel;
+42-import android.os.PowerManager;
+43-import android.os.BatteryManager;
+44:import android.os.SystemProperties;
+45-import android.os.PowerManager.WakeLock;
+46-import android.os.SystemClock;
+47-import android.provider.Settings.SettingNotFoundException;
+48-import android.telephony.CellInfo;
+--
+737-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, RILJ_LOG_TAG);
+738-        mWakeLock.setReferenceCounted(false);
+739-        mAckWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, RILJ_ACK_WAKELOCK_NAME);
+740-        mAckWakeLock.setReferenceCounted(false);
+741:        mWakeLockTimeout = SystemProperties.getInt(TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT,
+742-                DEFAULT_WAKE_LOCK_TIMEOUT_MS);
+743:        mAckWakeLockTimeout = SystemProperties.getInt(
+744-                TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT, DEFAULT_ACK_WAKE_LOCK_TIMEOUT_MS);
+745-        mWakeLockCount = 0;
+746-
+747-        mSenderThread = new HandlerThread("RILSender" + mInstanceId);
+--
+3169-
+3170-                result[0] = ret;
+3171-                result[1] = Long.valueOf(nitzReceiveTime);
+3172-
+3173:                boolean ignoreNitz = SystemProperties.getBoolean(
+3174-                        TelephonyProperties.PROPERTY_IGNORE_NITZ, false);
+3175-
+3176-                if (ignoreNitz) {
+3177-                    if (RILJ_LOGD) riljLog("ignoring UNSOL_NITZ_TIME_RECEIVED");
+
+src/java/com/android/internal/telephony/RetryManager.java
+18-
+19-import android.content.Context;
+20-import android.os.Build;
+21-import android.os.PersistableBundle;
+22:import android.os.SystemProperties;
+23-import android.telephony.CarrierConfigManager;
+24-import android.telephony.Rlog;
+25-import android.text.TextUtils;
+26-import android.util.Pair;
+--
+319-        String configString = "";
+320-        try {
+321-            if (Build.IS_DEBUGGABLE) {
+322-                // Using system properties is easier for testing from command line.
+323:                String config = SystemProperties.get("test.data_retry_config");
+324-                if (!TextUtils.isEmpty(config)) {
+325-                    configure(config);
+326-                    return;
+327-                }
+
+src/java/com/android/internal/telephony/cat/ResponseData.java
+19-import com.android.internal.telephony.EncodeException;
+20-import com.android.internal.telephony.GsmAlphabet;
+21-import java.util.Calendar;
+22-import java.util.TimeZone;
+23:import android.os.SystemProperties;
+24-import android.text.TextUtils;
+25-
+26-import com.android.internal.telephony.cat.AppInterface.CommandType;
+27-
+--
+250-
+251-        // Fill second byte
+252-        data[6] = byteToBCD(mCalendar.get(java.util.Calendar.SECOND));
+253-
+254:        String tz = SystemProperties.get("persist.sys.timezone", "");
+255-        if (TextUtils.isEmpty(tz)) {
+256-            data[7] = (byte) 0xFF;    // set FF in terminal response
+257-        } else {
+258-            TimeZone zone = TimeZone.getTimeZone(tz);
+
+src/java/com/android/internal/telephony/cat/CatService.java
+24-import android.os.AsyncResult;
+25-import android.os.Handler;
+26-import android.os.HandlerThread;
+27-import android.os.Message;
+28:import android.os.SystemProperties;
+29-import android.telephony.SubscriptionManager;
+30-import android.telephony.TelephonyManager;
+31-
+32-import com.android.internal.telephony.CommandsInterface;
+
+src/java/com/android/internal/telephony/Phone.java
+31-import android.os.Looper;
+32-import android.os.Message;
+33-import android.os.Registrant;
+34-import android.os.RegistrantList;
+35:import android.os.SystemProperties;
+36-import android.preference.PreferenceManager;
+37-import android.provider.Settings;
+38-import android.telecom.VideoProfile;
+39-import android.telephony.CellIdentityCdma;
+--
+374-    public void setSystemProperty(String property, String value) {
+375-        if(getUnitTestMode()) {
+376-            return;
+377-        }
+378:        SystemProperties.set(property, value);
+379-    }
+380-
+381-    /**
+382-     * Set a system property, unless we're in unit test mode
+--
+385-    public String getSystemProperty(String property, String defValue) {
+386-        if(getUnitTestMode()) {
+387-            return null;
+388-        }
+389:        return SystemProperties.get(property, defValue);
+390-    }
+391-
+392-    /**
+393-     * Constructs a Phone in normal (non-unit test) mode.
+--
+456-         * By default old phones won't have the property set but do generate
+457-         * the RIL_UNSOL_CALL_RING so the default if there is no property is
+458-         * true.
+459-         */
+460:        mDoesRilSendMultipleCallRing = SystemProperties.getBoolean(
+461-                TelephonyProperties.PROPERTY_RIL_SENDS_MULTIPLE_CALL_RING, true);
+462-        Rlog.d(LOG_TAG, "mDoesRilSendMultipleCallRing=" + mDoesRilSendMultipleCallRing);
+463-
+464:        mCallRingDelay = SystemProperties.getInt(
+465-                TelephonyProperties.PROPERTY_CALL_RING_DELAY, 3000);
+466-        Rlog.d(LOG_TAG, "mCallRingDelay=" + mCallRingDelay);
+467-
+468-        if (getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+--
+1434-     * Set the properties by matching the carrier string in
+1435-     * a string-array resource
+1436-     */
+1437-    private static Locale getLocaleFromCarrierProperties(Context ctx) {
+1438:        String carrier = SystemProperties.get("ro.carrier");
+1439-
+1440-        if (null == carrier || 0 == carrier.length() || "unknown".equals(carrier)) {
+1441-            return null;
+1442-        }
+
+src/java/com/android/internal/telephony/dataconnection/DataCallResponse.java
+20-import android.net.LinkAddress;
+21-import android.net.LinkProperties;
+22-import android.net.NetworkUtils;
+23-import android.net.RouteInfo;
+24:import android.os.SystemProperties;
+25-import android.telephony.Rlog;
+26-
+27-import com.android.internal.telephony.PhoneConstants;
+28-import com.android.internal.telephony.dataconnection.DcFailCause;
+--
+189-                        }
+190-                    }
+191-                } else if (okToUseSystemPropertyDns){
+192-                    String dnsServers[] = new String[2];
+193:                    dnsServers[0] = SystemProperties.get(propertyPrefix + "dns1");
+194:                    dnsServers[1] = SystemProperties.get(propertyPrefix + "dns2");
+195-                    for (String dnsAddr : dnsServers) {
+196-                        dnsAddr = dnsAddr.trim();
+197-                        if (dnsAddr.isEmpty()) continue;
+198-                        InetAddress ia;
+--
+210-                }
+211-
+212-                // set gateways
+213-                if ((gateways == null) || (gateways.length == 0)) {
+214:                    String sysGateways = SystemProperties.get(propertyPrefix + "gw");
+215-                    if (sysGateways != null) {
+216-                        gateways = sysGateways.split(" ");
+217-                    } else {
+218-                        gateways = new String[0];
+
+src/java/com/android/internal/telephony/dataconnection/DataConnection.java
+41-import android.os.AsyncResult;
+42-import android.os.Looper;
+43-import android.os.Message;
+44-import android.os.SystemClock;
+45:import android.os.SystemProperties;
+46-import android.telephony.Rlog;
+47-import android.telephony.ServiceState;
+48-import android.telephony.TelephonyManager;
+49-import android.text.TextUtils;
+--
+933-        // Check if system property dns usable
+934-        boolean okToUseSystemPropertyDns = false;
+935-        String propertyPrefix = "net." + response.ifname + ".";
+936-        String dnsServers[] = new String[2];
+937:        dnsServers[0] = SystemProperties.get(propertyPrefix + "dns1");
+938:        dnsServers[1] = SystemProperties.get(propertyPrefix + "dns2");
+939-        okToUseSystemPropertyDns = isDnsOk(dnsServers);
+940-
+941-        // set link properties based on data call response
+942-        return response.setLinkProperties(lp, okToUseSystemPropertyDns);
+
+src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+51-import android.os.PersistableBundle;
+52-import android.os.RegistrantList;
+53-import android.os.ServiceManager;
+54-import android.os.SystemClock;
+55:import android.os.SystemProperties;
+56-import android.preference.PreferenceManager;
+57-import android.provider.Settings;
+58-import android.provider.Settings.SettingNotFoundException;
+59-import android.provider.Telephony;
+--
+1856-        apnContext.requestLog(str);
+1857-    }
+1858-
+1859-    ApnSetting fetchDunApn() {
+1860:        if (SystemProperties.getBoolean("net.tethering.noprovisioning", false)) {
+1861-            log("fetchDunApn: net.tethering.noprovisioning=true ret: null");
+1862-            return null;
+1863-        }
+1864-        int bearer = mPhone.getServiceState().getRilDataRadioTechnology();
+--
+2292-        int[] singleDcRats = mPhone.getContext().getResources().getIntArray(
+2293-                com.android.internal.R.array.config_onlySingleDcAllowed);
+2294-        boolean onlySingleDcAllowed = false;
+2295-        if (Build.IS_DEBUGGABLE &&
+2296:                SystemProperties.getBoolean("persist.telephony.test.singleDc", false)) {
+2297-            onlySingleDcAllowed = true;
+2298-        }
+2299-        if (singleDcRats != null) {
+2300-            for (int i=0; i < singleDcRats.length && onlySingleDcAllowed == false; i++) {
+--
+2323-         * desired power state has changed in the interim, we don't want to
+2324-         * override it with an unconditional power on.
+2325-         */
+2326-
+2327:        int reset = Integer.parseInt(SystemProperties.get("net.ppp.reset-by-timeout", "0"));
+2328:        SystemProperties.set("net.ppp.reset-by-timeout", String.valueOf(reset + 1));
+2329-    }
+2330-
+2331-    /**
+2332-     * Return true if data connection need to be setup after disconnected due to
+--
+2658-    public boolean getDataEnabled() {
+2659-        final int device_provisioned =
+2660-                Settings.Global.getInt(mResolver, Settings.Global.DEVICE_PROVISIONED, 0);
+2661-
+2662:        boolean retVal = "true".equalsIgnoreCase(SystemProperties.get(
+2663-                "ro.com.android.mobiledata", "true"));
+2664-        if (TelephonyManager.getDefault().getSimCount() == 1) {
+2665-            retVal = Settings.Global.getInt(mResolver, Settings.Global.MOBILE_DATA,
+2666-                    retVal ? 1 : 0) != 0;
+--
+2679-            // want during this process
+2680-            //
+2681-            // use the normal data_enabled setting (retVal, determined above)
+2682-            // as the default if nothing else is set
+2683:            final String prov_property = SystemProperties.get("ro.com.android.prov_mobiledata",
+2684-                  retVal ? "true" : "false");
+2685-            retVal = "true".equalsIgnoreCase(prov_property);
+2686-
+2687-            final int prov_mobile_data = Settings.Global.getInt(mResolver,
+--
+2728-    /**
+2729-     * Return current {@link android.provider.Settings.Global#DATA_ROAMING} value.
+2730-     */
+2731-    public boolean getDataOnRoamingEnabled() {
+2732:        boolean isDataRoamingEnabled = "true".equalsIgnoreCase(SystemProperties.get(
+2733-                "ro.com.android.dataroaming", "false"));
+2734-        final int phoneSubId = mPhone.getSubId();
+2735-
+2736-        try {
+--
+2917-
+2918-                // everything is setup
+2919-                if(TextUtils.equals(apnContext.getApnType(),PhoneConstants.APN_TYPE_DEFAULT)) {
+2920-                    try {
+2921:                        SystemProperties.set(PUPPET_MASTER_RADIO_STRESS_TEST, "true");
+2922-                    } catch (RuntimeException ex) {
+2923-                        log("Failed to set PUPPET_MASTER_RADIO_STRESS_TEST to true");
+2924-                    }
+2925-                    if (mCanSetPreferApn && mPreferredApn == null) {
+--
+2930-                        }
+2931-                    }
+2932-                } else {
+2933-                    try {
+2934:                        SystemProperties.set(PUPPET_MASTER_RADIO_STRESS_TEST, "false");
+2935-                    } catch (RuntimeException ex) {
+2936-                        log("Failed to set PUPPET_MASTER_RADIO_STRESS_TEST to false");
+2937-                    }
+2938-                }
+--
+3177-        }
+3178-        // If APN is still enabled, try to bring it back up automatically
+3179-        if (mAttached.get() && apnContext.isReady() && retryAfterDisconnected(apnContext)) {
+3180-            try {
+3181:                SystemProperties.set(PUPPET_MASTER_RADIO_STRESS_TEST, "false");
+3182-            } catch (RuntimeException ex) {
+3183-                log("Failed to set PUPPET_MASTER_RADIO_STRESS_TEST to false");
+3184-            }
+3185-            // Wait a bit before trying the next APN, so that
+--
+4679-                // Once RADIO_RESET property is consumed, it is expected to set back
+4680-                // to false by RIL.
+4681-                EventLog.writeEvent(EventLogTags.DATA_STALL_RECOVERY_RADIO_RESTART_WITH_PROP, -1);
+4682-                if (DBG) log("restarting radio with gsm.radioreset to true");
+4683:                SystemProperties.set(RADIO_RESET_PROPERTY, "true");
+4684-                // give 1 sec so property change can be notified.
+4685-                try {
+4686-                    Thread.sleep(1000);
+4687-                } catch (InterruptedException e) {}
+--
+4710-        sent = mDataStallTxRxSum.txPkts - preTxRxSum.txPkts;
+4711-        received = mDataStallTxRxSum.rxPkts - preTxRxSum.rxPkts;
+4712-
+4713-        if (RADIO_TESTS) {
+4714:            if (SystemProperties.getBoolean("radio.test.data.stall", false)) {
+4715-                log("updateDataStallInfo: radio.test.data.stall true received = 0;");
+4716-                received = 0;
+4717-            }
+4718-        }
+
+src/java/com/android/internal/telephony/sip/SipPhoneBase.java
+22-import android.os.Bundle;
+23-import android.os.Handler;
+24-import android.os.Message;
+25-import android.os.RegistrantList;
+26:import android.os.SystemProperties;
+27-import android.telephony.CellLocation;
+28-import android.telephony.ServiceState;
+29-import android.telephony.SignalStrength;
+30-import android.telephony.Rlog;
+--
+205-        int serviceState = getServiceState().getState();
+206-        Rlog.v(LOG_TAG, "canDial(): serviceState = " + serviceState);
+207-        if (serviceState == ServiceState.STATE_POWER_OFF) return false;
+208-
+209:        String disableCall = SystemProperties.get(
+210-                TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
+211-        Rlog.v(LOG_TAG, "canDial(): disableCall = " + disableCall);
+212-        if (disableCall.equals("true")) return false;
+213-
+
+src/java/com/android/internal/telephony/CallTracker.java
+20-import android.os.AsyncResult;
+21-import android.os.Handler;
+22-import android.os.Message;
+23-import android.os.PersistableBundle;
+24:import android.os.SystemProperties;
+25-import android.telephony.CarrierConfigManager;
+26-import android.text.TextUtils;
+27-
+28-import java.io.FileDescriptor;
+--
+177-     * @param dialString to test if it should be remapped
+178-     * @return the same number or the remapped number.
+179-     */
+180-    protected String checkForTestEmergencyNumber(String dialString) {
+181:        String testEn = SystemProperties.get("ril.test.emergencynumber");
+182-        if (DBG_POLL) {
+183-            log("checkForTestEmergencyNumber: dialString=" + dialString +
+184-                " testEn=" + testEn);
+185-        }
+
+src/java/com/android/internal/telephony/GsmCdmaPhone.java
+32-import android.os.PersistableBundle;
+33-import android.os.PowerManager;
+34-import android.os.Registrant;
+35-import android.os.RegistrantList;
+36:import android.os.SystemProperties;
+37-import android.os.UserHandle;
+38-import android.preference.PreferenceManager;
+39-import android.provider.Settings;
+40-import android.provider.Telephony;
+--
+253-        // get the string that specifies the carrier OTA Sp number
+254-        mCarrierOtaSpNumSchema = TelephonyManager.from(mContext).getOtaSpNumberSchemaForPhone(
+255-                getPhoneId(), "");
+256-
+257:        mResetModemOnRadioTechnologyChange = SystemProperties.getBoolean(
+258-                TelephonyProperties.PROPERTY_RESET_ON_RADIO_TECH_CHANGE, false);
+259-
+260-        mCi.registerForRilConnected(this, EVENT_RIL_CONNECTED, null);
+261-        mCi.registerForVoiceRadioTechChanged(this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
+--
+280-            mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
+281-        } else {
+282-            mCdmaSubscriptionSource = CdmaSubscriptionSourceManager.SUBSCRIPTION_SOURCE_UNKNOWN;
+283-            // This is needed to handle phone process crashes
+284:            String inEcm = SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE, "false");
+285-            mIsPhoneInEcmState = inEcm.equals("true");
+286-            if (mIsPhoneInEcmState) {
+287-                // Send a message which will invoke handleExitEmergencyCallbackMode
+288-                mCi.exitEmergencyCallbackMode(
+--
+292-            mCi.setPhoneType(PhoneConstants.PHONE_TYPE_CDMA);
+293-            tm.setPhoneType(getPhoneId(), PhoneConstants.PHONE_TYPE_CDMA);
+294-            mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_1xRTT);
+295-            // Sets operator properties by retrieving from build-time system property
+296:            String operatorAlpha = SystemProperties.get("ro.cdma.home.operator.alpha");
+297:            String operatorNumeric = SystemProperties.get(PROPERTY_CDMA_HOME_OPERATOR_NUMERIC);
+298-            logd("init: operatorAlpha='" + operatorAlpha
+299-                    + "' operatorNumeric='" + operatorNumeric + "'");
+300-            if (mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP) ==
+301-                    null || isPhoneTypeCdmaLte()) {
+--
+2685-            setSystemProperty(TelephonyProperties.PROPERTY_INECM_MODE, "true");
+2686-
+2687-            // Post this runnable so we will automatically exit
+2688-            // if no one invokes exitEmergencyCallbackMode() directly.
+2689:            long delayInMillis = SystemProperties.getLong(
+2690-                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+2691-            postDelayed(mExitEcmRunnable, delayInMillis);
+2692-            // We don't want to go to sleep while in Ecm
+2693-            mWakeLock.acquire();
+--
+2743-                removeCallbacks(mExitEcmRunnable);
+2744-                mEcmTimerResetRegistrants.notifyResult(Boolean.TRUE);
+2745-                break;
+2746-            case RESTART_ECM_TIMER:
+2747:                long delayInMillis = SystemProperties.getLong(
+2748-                        TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+2747:                long delayInMillis = SystemProperties.setLong(
+2748-                        TelephonyProperties.PROPERTY_ECM_EXIT_TIMER_1, DEFAULT_ECM_EXIT_TIMER_VALUE_1);
+2747:                long delayInMillis = SystemProperties.setLong(
+2748-                        TelephonyProperties.PROPERTY_ECM_EXIT_TIMER_2);
+2749-                postDelayed(mExitEcmRunnable, delayInMillis);
+2750-                mEcmTimerResetRegistrants.notifyResult(Boolean.FALSE);
+2751-                break;
+--
+3207-            }
+3208-        } else { //isPhoneTypeCdmaLte()
+3209-            IccRecords curIccRecords = null;
+3210-            if (mCdmaSubscriptionSource == CDMA_SUBSCRIPTION_NV) {
+3211:                operatorNumeric = SystemProperties.get("ro.cdma.home.operator.numeric");
+3212-            } else if (mCdmaSubscriptionSource == CDMA_SUBSCRIPTION_RUIM_SIM) {
+3213-                curIccRecords = mSimRecords;
+3214-                if (curIccRecords != null) {
+3215-                    operatorNumeric = curIccRecords.getOperatorNumeric();
+
+src/java/com/android/internal/telephony/PhoneFactory.java
+24-import android.net.LocalServerSocket;
+25-import android.os.HandlerThread;
+26-import android.os.Looper;
+27-import android.os.ServiceManager;
+28:import android.os.SystemProperties;
+29-import android.os.UserHandle;
+30-import android.provider.Settings;
+31-import android.provider.Settings.SettingNotFoundException;
+32-import android.telephony.Rlog;
